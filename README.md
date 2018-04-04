@@ -89,4 +89,4 @@ CeleryCloudWatch Function need 3 inputs
 
 ## License
 
-MIT License (see [LICENSE](LICENSE))
+GNU General Public License v3.0 (see [LICENSE](LICENSE))
