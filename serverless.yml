@@ -1,0 +1,82 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+# If you want to deploy lambda function inside VPC then
+# 1. specify security_group_ids, subnet_ids in custom block
+#    and uncomment vpc block under provider
+# 2. uncomment NetworkInterface permission
+
+service: celery-autoscale-cloudwatch
+
+custom:
+  default_stage: dev
+  region: us-east-2
+  current_stage: ${opt:stage, self:custom.default_stage}
+  cloudwatch_namespace: 'Celery/Queue'
+#  security_group_ids: ["sg-5d93f235"]
+#  subnet_ids: ["subnet-da392aa1"]
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: ${self:custom.current_stage}
+  memorySize: 128
+  region: ${self:custom.region}
+#  vpc:
+#    securityGroupIds: ${self:custom.security_group_ids}
+#    subnetIds: ${self:custom.subnet_ids}
+# you can add statements to the Lambda function's IAM Role here
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "cloudwatch:PutMetricData"
+      Resource: "*"
+#    - Effect: "Allow"
+#      Action:
+#        - "ec2:CreateNetworkInterface"
+#        - "ec2:DescribeNetworkInterfaces"
+#        - "ec2:DeleteNetworkInterface"
+#      Resource: "*"
+
+# you can define service wide environment variables here
+  environment:
+    STAGE: ${self:custom.current_stage}
+    CLOUDWATCH_NAMESPACE: ${self:custom.cloudwatch_namespace}
+
+# you can add packaging information here
+package:
+ exclude:
+   - .idea/**
+   - __pycache__/**
+   - .git/**
+   - examples/**
+   - queue_states_command.py
+   - test_queue_stats.py
+
+# update input variables to track proper celery broker
+functions:
+  CeleryCloudWatch:
+    handler: handler.celery_task_status_watch_handler
+    description: Collects celery peding task count to celery cloudwatch
+    events:
+      - schedule:
+          rate: rate(1 minute)
+          enabled: true
+          input:
+            service: test
+            broker: redis://localhost:6379/0
+            queues: ["celery"]
