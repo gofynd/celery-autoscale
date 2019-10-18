@@ -1,6 +1,6 @@
 boto3==1.5.31
 botocore==1.8.45
 python-dateutil==2.6.1
-urllib3==1.22
+urllib3==1.24.2
 redis==2.10.6
 requests==2.18.4
